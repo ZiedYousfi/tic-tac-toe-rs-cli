@@ -34,6 +34,8 @@ fn main() {
                 continue;
             }
         }
+
+        player_1_turn = !player_1_turn;
     }
 
     match end_game() {
