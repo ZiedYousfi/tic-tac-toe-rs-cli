@@ -4,3 +4,17 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+# sorry, its not supposed to have dependencies
+# but i need to use this for the clear screen
+# and i don't want to write it myself
+# cause im dumb (and lazy)
+#
+# FUCK
+#
+# oh and i don't know how to support windows
+# so if you want to run this on windows
+# sorry :'(
+# i guess you can just run it in WSL
+# or use a different terminal
+# idk do what you want
+clearscreen = "4.0.1"
