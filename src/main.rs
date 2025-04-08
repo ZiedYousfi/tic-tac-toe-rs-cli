@@ -25,7 +25,7 @@ fn main() {
         match checks_win(&board_vec) {
             Ok(b) => {
                 if b {
-                    player_1_turn = player_1_win;
+                    player_1_win = player_1_turn;
                     playing = false;
                 }
             }
@@ -38,7 +38,7 @@ fn main() {
         player_1_turn = !player_1_turn;
     }
 
-    match end_game() {
+    match end_game(player_1_win) {
         Ok(_) => {}
         Err(e) => {
             eprintln!("Error : {}", e);
@@ -54,6 +54,6 @@ fn checks_win(board: &[u8; 9]) -> Result<bool, Error> {
     Ok(false)
 }
 
-fn end_game() -> Result<(), Error> {
+fn end_game(player1_win: bool) -> Result<(), Error> {
     Ok(())
 }
