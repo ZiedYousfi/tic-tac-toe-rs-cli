@@ -1,6 +1,7 @@
-use anyhow::{Result, Error};
+use anyhow::{Error, Result};
 use std::thread;
 use std::time::Duration;
+// use std::result::Result;
 
 fn main() {
     println!("Hello, world!");
@@ -44,11 +45,10 @@ fn main() {
 
         player_1_turn = !player_1_turn;
 
-        println!("frame {}",i);
+        println!("frame {}", i);
 
         thread::sleep(Duration::from_secs_f64(REFRESH_RATE));
         clearscreen::clear().unwrap();
-
     }
 
     match end_game(player_1_win) {
@@ -60,7 +60,6 @@ fn main() {
 }
 
 fn play_action(board: &mut [u8; 9], selector: u8) -> Result<(), Error> {
-
     let to_print: [&str; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(|i| {
         if selector as usize == i {
             match board[i] {
@@ -96,20 +95,92 @@ fn end_game(player1_win: bool) -> Result<(), Error> {
     Ok(())
 }
 
-fn selector_wrapper(i: i64) -> Result<u8, Error>{
-
+fn selector_wrapper(i: i64) -> Result<u8, Error> {
     let mut result: i64 = 0;
     let mut diff: i64 = 0;
 
     if (0..9).contains(&i) {
-        return Err(anyhow::format_err!("absolutely useless call of this mighty wrapper"));
+        return Err(anyhow::format_err!(
+            "absolutely useless call of this mighty wrapper"
+        ));
     }
 
-    
+    diff = match &i {
+        n if n > &9 => 9 + n,
+        n if n < &0 => 0 - n,
+        _ => return Err(anyhow::format_err!("how did we get here?")),
+    };
+
+    result = match diff {
+        n if n > 9 => {
+            if (0..9).contains(&n) {
+                n
+            } else {
+                selector_wrapper(n).expect("msg") as i64
+            }
+        }
+        n if n < 0 => {
+            if (0..9).contains(&(9 - n)) {
+                9 - n
+            } else {
+                selector_wrapper(9 - n).expect("msg") as i64
+            }
+        }
+        _ => return Err(anyhow::format_err!("how did we get here?")),
+    };
 
     if result < 0 {
         return Err(anyhow::format_err!("im dumb"));
     }
 
     Ok(result as u8)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_selector_wrapper_rejects_valid_inputs() {
+        // Function should reject inputs that are already in range
+        for i in 0..9 {
+            let result = selector_wrapper(i);
+            assert!(result.is_err());
+            assert!(result.unwrap_err().to_string().contains("useless call"));
+        }
+    }
+
+    #[test]
+    fn test_selector_wrapper_handles_out_of_bounds_positive() {
+        // Test simple out of bounds positive cases
+        assert_eq!(selector_wrapper(10).unwrap(), 0);  // 10 wraps to 0
+        assert_eq!(selector_wrapper(11).unwrap(), 1);  // 11 wraps to 1
+        assert_eq!(selector_wrapper(17).unwrap(), 7);  // 17 wraps to 7
+        assert_eq!(selector_wrapper(18).unwrap(), 8);  // 18 wraps to 8
+    }
+
+    #[test]
+    fn test_selector_wrapper_handles_out_of_bounds_negative() {
+        // Test simple out of bounds negative cases
+        assert_eq!(selector_wrapper(-1).unwrap(), 8);  // -1 wraps to 8
+        assert_eq!(selector_wrapper(-2).unwrap(), 7);  // -2 wraps to 7
+        assert_eq!(selector_wrapper(-8).unwrap(), 1);  // -8 wraps to 1
+        assert_eq!(selector_wrapper(-9).unwrap(), 0);  // -9 wraps to 0
+    }
+
+    #[test]
+    fn test_selector_wrapper_handles_far_out_of_bounds() {
+        // Test values far outside the range that require multiple wraps
+        assert_eq!(selector_wrapper(19).unwrap(), 0);   // Double wrap: 19 -> 9 -> 0
+        assert_eq!(selector_wrapper(28).unwrap(), 0);   // Triple wrap
+        assert_eq!(selector_wrapper(-10).unwrap(), 8);  // Double wrap: -10 -> -1 -> 8
+        assert_eq!(selector_wrapper(-19).unwrap(), 8);  // Triple wrap
+    }
+
+    #[test]
+    fn test_selector_wrapper_handles_extreme_values() {
+        // Test with larger values
+        assert!(selector_wrapper(100).is_ok());  // Should handle without panicking
+        assert!(selector_wrapper(-100).is_ok()); // Should handle without panicking
+    }
 }
