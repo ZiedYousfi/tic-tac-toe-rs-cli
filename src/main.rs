@@ -99,6 +99,13 @@ fn end_game(player1_win: bool) -> Result<(), Error> {
 fn selector_wrapper(i: i64) -> Result<u8, Error>{
 
     let mut result: i64 = 0;
+    let mut diff: i64 = 0;
+
+    if (0..9).contains(&i) {
+        return Err(anyhow::format_err!("absolutely useless call of this mighty wrapper"));
+    }
+
+    
 
     if result < 0 {
         return Err(anyhow::format_err!("im dumb"));
