@@ -1,11 +1,10 @@
 use std::fmt::Error;
-use std::process::Command;
 use std::thread;
 use std::time::Duration;
 
 fn main() {
     println!("Hello, world!");
-    let refresh_rate: f64 = 1.0 / 12.0;
+    const REFRESH_RATE: f64 = 1.0 / 12.0;
 
     let mut playing: bool = false;
     let mut player_1_turn: bool = true;
@@ -18,7 +17,10 @@ fn main() {
     playing = true;
     clearscreen::clear().unwrap();
 
+    let mut i: u64 = 0;
+
     while playing {
+        i += 1;
         match play_action(&mut board_vec, player_selector) {
             Ok(_) => {}
             Err(e) => {
@@ -42,7 +44,9 @@ fn main() {
 
         player_1_turn = !player_1_turn;
 
-        thread::sleep(Duration::from_secs_f64(refresh_rate));
+        println!("frame {}",i);
+
+        thread::sleep(Duration::from_secs_f64(REFRESH_RATE));
         clearscreen::clear().unwrap();
 
     }
@@ -56,11 +60,30 @@ fn main() {
 }
 
 fn play_action(board: &mut [u8; 9], selector: u8) -> Result<(), Error> {
-    println!("{} | {} | {}", board[0], board[1], board[2]);
+
+    let to_print: [&str; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(|i| {
+        if selector as usize == i {
+            match board[i] {
+                0 => "0*",
+                1 => "1*",
+                2 => "2*",
+                _ => "x*",
+            }
+        } else {
+            match board[i] {
+                0 => " ",
+                1 => "1",
+                2 => "2",
+                _ => "x",
+            }
+        }
+    });
+
+    println!("{} | {} | {}", to_print[0], to_print[1], to_print[2]);
     println!("------------");
-    println!("{} | {} | {}", board[3], board[4], board[5]);
+    println!("{} | {} | {}", to_print[3], to_print[4], to_print[5]);
     println!("------------");
-    println!("{} | {} | {}", board[6], board[7], board[8]);
+    println!("{} | {} | {}", to_print[6], to_print[7], to_print[8]);
 
     Ok(())
 }
