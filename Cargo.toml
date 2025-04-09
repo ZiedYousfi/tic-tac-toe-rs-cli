@@ -18,3 +18,18 @@ edition = "2024"
 # or use a different terminal
 # idk do what you want
 clearscreen = "4.0.1"
+
+# ANOTHER ONE
+# FUUUUUUUUUUUUCK
+# this is for the input
+# and i don't want to write it myself
+# cause im dumb (and lazy)
+# and i don't want to write it myself
+# cause im dumb (and lazy)
+# and i don't want to write it myself
+# cause im dumb (and lazy)
+term_input = "0.1.5"
+
+# nah this is one is actually useful
+# this is for the error handling
+anyhow = "1.0.0"

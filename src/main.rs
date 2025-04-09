@@ -1,4 +1,4 @@
-use std::fmt::Error;
+use anyhow::{Result, Error};
 use std::thread;
 use std::time::Duration;
 
@@ -94,4 +94,15 @@ fn checks_win(board: &[u8; 9]) -> Result<bool, Error> {
 
 fn end_game(player1_win: bool) -> Result<(), Error> {
     Ok(())
+}
+
+fn selector_wrapper(i: i64) -> Result<u8, Error>{
+
+    let mut result: i64 = 0;
+
+    if result < 0 {
+        return Err(anyhow::format_err!("im dumb"));
+    }
+
+    Ok(result as u8)
 }
