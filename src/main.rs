@@ -106,28 +106,20 @@ fn selector_wrapper(i: i64) -> Result<u8, Error> {
     }
 
     diff = match &i {
-        n if n > &9 => 9 + n,
+        n if n > &8 => n - (9 + 1),
         n if n < &0 => 0 - n,
-        _ => return Err(anyhow::format_err!("how did we get here?")),
+        _ => return Err(anyhow::format_err!("how did we get here? (diff)")),
     };
 
-    result = match diff {
-        n if n > 9 => {
-            if (0..9).contains(&n) {
-                n
-            } else {
-                selector_wrapper(n).expect("msg") as i64
-            }
-        }
-        n if n < 0 => {
-            if (0..9).contains(&(9 - n)) {
-                9 - n
-            } else {
-                selector_wrapper(9 - n).expect("msg") as i64
-            }
-        }
-        _ => return Err(anyhow::format_err!("how did we get here?")),
+    result = match &i {
+        n if n > &8 => diff,
+        n if n < &0 => 9 - &diff,
+        _ => i,
     };
+
+    if !(0..9).contains(&result) {
+        result = selector_wrapper(result).expect("msg") as i64;
+    }
 
     if result < 0 {
         return Err(anyhow::format_err!("im dumb"));
