@@ -104,56 +104,54 @@ async fn play_action(board: &mut [u8; 9], selector: &mut u8) -> Result<(), Error
     let mut next_selector_value = *selector;
 
     match user_input().await {
-        Ok(input_type) => {
-            match input_type {
-                InputType::KeyUp => {
-                    next_selector_value = (*selector as i64 - 3) as u8;
-                    match selector_wrapper(*selector as i64 - 3) {
-                        Ok(v) => *selector = v,
-                        Err(e) => {
-                            match e {
-                                WrapperErrorType::UselessCall => *selector = next_selector_value,
-                                WrapperErrorType::AnyhowError(e) => return Err(anyhow::format_err!("Actual error for wrapper: {}", e))
-                            }
+        Ok(input_type) => match input_type {
+            InputType::KeyUp => {
+                next_selector_value = (*selector as i64 - 3) as u8;
+                match selector_wrapper(*selector as i64 - 3) {
+                    Ok(v) => *selector = v,
+                    Err(e) => match e {
+                        WrapperErrorType::UselessCall => *selector = next_selector_value,
+                        WrapperErrorType::AnyhowError(e) => {
+                            return Err(anyhow::format_err!("Actual error for wrapper: {}", e));
                         }
-                    }
-                },
-                InputType::KeyDown => {
-                    next_selector_value = (*selector as i64 + 3) as u8;
-                    match selector_wrapper(*selector as i64 + 3) {
-                        Ok(v) => *selector = v,
-                        Err(e) => {
-                            match e {
-                                WrapperErrorType::UselessCall => *selector = next_selector_value,
-                                WrapperErrorType::AnyhowError(e) => return Err(anyhow::format_err!("Actual error for wrapper: {}", e))
-                            }
+                    },
+                }
+            }
+            InputType::KeyDown => {
+                next_selector_value = (*selector as i64 + 3) as u8;
+                match selector_wrapper(*selector as i64 + 3) {
+                    Ok(v) => *selector = v,
+                    Err(e) => match e {
+                        WrapperErrorType::UselessCall => *selector = next_selector_value,
+                        WrapperErrorType::AnyhowError(e) => {
+                            return Err(anyhow::format_err!("Actual error for wrapper: {}", e));
                         }
-                    }
-                },
-                InputType::KeyLeft => {
-                    next_selector_value = (*selector as i64 - 1) as u8;
-                    match selector_wrapper(*selector as i64 - 1) {
-                        Ok(v) => *selector = v,
-                        Err(e) => {
-                            match e {
-                                WrapperErrorType::UselessCall => *selector = next_selector_value,
-                                WrapperErrorType::AnyhowError(e) => return Err(anyhow::format_err!("Actual error for wrapper: {}", e))
-                            }
+                    },
+                }
+            }
+            InputType::KeyLeft => {
+                next_selector_value = (*selector as i64 - 1) as u8;
+                match selector_wrapper(*selector as i64 - 1) {
+                    Ok(v) => *selector = v,
+                    Err(e) => match e {
+                        WrapperErrorType::UselessCall => *selector = next_selector_value,
+                        WrapperErrorType::AnyhowError(e) => {
+                            return Err(anyhow::format_err!("Actual error for wrapper: {}", e));
                         }
-                    }
-                },
-                InputType::KeyRight => {
-                    next_selector_value = (*selector as i64 + 1) as u8;
-                    match selector_wrapper(*selector as i64 + 1) {
-                        Ok(v) => *selector = v,
-                        Err(e) => {
-                            match e {
-                                WrapperErrorType::UselessCall => *selector = next_selector_value,
-                                WrapperErrorType::AnyhowError(e) => return Err(anyhow::format_err!("Actual error for wrapper: {}", e))
-                            }
+                    },
+                }
+            }
+            InputType::KeyRight => {
+                next_selector_value = (*selector as i64 + 1) as u8;
+                match selector_wrapper(*selector as i64 + 1) {
+                    Ok(v) => *selector = v,
+                    Err(e) => match e {
+                        WrapperErrorType::UselessCall => *selector = next_selector_value,
+                        WrapperErrorType::AnyhowError(e) => {
+                            return Err(anyhow::format_err!("Actual error for wrapper: {}", e));
                         }
-                    }
-                },
+                    },
+                }
             }
         },
         Err(e) => eprintln!("Input error: {}", e),
@@ -181,7 +179,12 @@ fn selector_wrapper(i: i64) -> Result<u8, WrapperErrorType> {
     while !(0..9).contains(&tmp) {
         tmp = match simple_wrapper(tmp) {
             Ok(val) => val,
-            Err(e) => return Err(WrapperErrorType::AnyhowError(anyhow::format_err!("Wrapper error: {:?}", e))),
+            Err(e) => {
+                return Err(WrapperErrorType::AnyhowError(anyhow::format_err!(
+                    "Wrapper error: {:?}",
+                    e
+                )));
+            }
         };
     }
 
@@ -190,20 +193,28 @@ fn selector_wrapper(i: i64) -> Result<u8, WrapperErrorType> {
 }
 
 fn simple_wrapper(i: i64) -> Result<i64, WrapperErrorType> {
+    let mut result: i64 = 0;
+
+    let mut tmp: i64 = 0;
+
     if (0..9).contains(&i) {
         return Err(WrapperErrorType::UselessCall);
     }
 
     let diff: i64 = match &i {
-        n if n > &8 => n - 9,
+        n if n > &8 => n - (9 + 1),
         n if n < &0 => 0 - n,
-        _ => return Err(WrapperErrorType::AnyhowError(anyhow::format_err!("how did we get here? (diff)"))),
+        _ => {
+            return Err(WrapperErrorType::AnyhowError(anyhow::format_err!(
+                "how did we get here? (diff)"
+            )));
+        }
     };
 
-    let tmp = match &i {
+    tmp = match &i {
         n if n > &8 => {
-            if diff > 9 {
-                diff - 9
+            if (0..9).contains(&(diff - (9 + 1))) {
+                -(diff - 1)
             } else {
                 diff
             }
@@ -213,15 +224,22 @@ fn simple_wrapper(i: i64) -> Result<i64, WrapperErrorType> {
     };
 
     if !(0..9).contains(&tmp) {
-        println!("tmp: {}, not yet", tmp);
-        return match selector_wrapper(tmp) {
-            Ok(val) => Ok(val as i64),
-            Err(e) => Err(e),
-        };
+        println!("tmp: {}", tmp);
+        println!("not yet");
+        tmp = selector_wrapper(tmp).expect("msg") as i64;
     }
 
-    println!("result: {}", tmp);
-    Ok(tmp)
+    if !(0..9).contains(&tmp) {
+        return Err(WrapperErrorType::AnyhowError(anyhow::format_err!(
+            "ok im dumb"
+        )));
+    }
+
+    result = tmp;
+
+    println!("result: {}", result);
+
+    Ok(result)
 }
 
 async fn user_input() -> Result<InputType, Error> {
