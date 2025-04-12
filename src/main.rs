@@ -1,7 +1,6 @@
 use anyhow::{Error, Result};
 use std::thread;
 use std::time::Duration;
-// use std::result::Result;
 
 fn main() {
     println!("Hello, world!");
@@ -100,6 +99,10 @@ fn selector_wrapper(i: i64) -> Result<u8, Error> {
 
     let mut tmp: i64 = i;
 
+    if (0..9).contains(&tmp) {
+        return Err(anyhow::format_err!("useless call"));
+    }
+
     while !(0..9).contains(&tmp) {
         tmp = simple_wrapper(tmp).expect("msg");
     }
@@ -134,8 +137,8 @@ fn simple_wrapper(i: i64) -> Result<i64, Error> {
 
     tmp = match &i {
         n if n > &8 => {
-            if !(0..9).contains(&i) {
-                diff + 1
+            if (0..9).contains(&(diff - (9 + 1))) {
+                -(diff - 1)
             } else {
                 diff
             }
@@ -178,9 +181,9 @@ mod tests {
     #[test]
     fn test_selector_wrapper_handles_out_of_bounds_positive() {
         // Test simple out of bounds positive cases
-        // assert_eq!(selector_wrapper(10).unwrap(), 0); // 10 wraps to 0
-        // assert_eq!(selector_wrapper(11).unwrap(), 1); // 11 wraps to 1
-        // assert_eq!(selector_wrapper(17).unwrap(), 7); // 17 wraps to 7
+        assert_eq!(selector_wrapper(10).unwrap(), 0); // 10 wraps to 0
+        assert_eq!(selector_wrapper(11).unwrap(), 1); // 11 wraps to 1
+        assert_eq!(selector_wrapper(17).unwrap(), 7); // 17 wraps to 7
         assert_eq!(selector_wrapper(18).unwrap(), 8); // 18 wraps to 8
     }
 
@@ -196,10 +199,10 @@ mod tests {
     #[test]
     fn test_selector_wrapper_handles_far_out_of_bounds() {
         // Test values that require recursive wrapping
-        // assert_eq!(selector_wrapper(19).unwrap(), 1); // 19 -> (19-9) = 10 -> (10-9) = 1
+        //assert_eq!(selector_wrapper(19).unwrap(), 1); // 19 -> (19-9) = 10 -> (10-9) = 1
         assert_eq!(selector_wrapper(28).unwrap(), 1); // 28 -> (28-9) = 19 -> (19-9) = 10 -> (10-9) = 1
-        // assert_eq!(selector_wrapper(-10).unwrap(), 8); // -10 -> (9-10) = 8
-        // assert_eq!(selector_wrapper(-19).unwrap(), 8); // -19 -> recursively wraps to 8
+        assert_eq!(selector_wrapper(-10).unwrap(), 8); // -10 -> (9-10) = 8
+        assert_eq!(selector_wrapper(-19).unwrap(), 8); // -19 -> recursively wraps to 8
     }
 
     #[test]
