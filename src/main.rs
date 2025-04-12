@@ -1,15 +1,9 @@
 use anyhow::{Error, Result};
 use crossterm::event::poll;
 use std::thread;
-use std::{io, time::Duration};
+use std::time::Duration;
 
-use crossterm::{
-    event::{
-        DisableBracketedPaste, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste,
-        EnableFocusChange, EnableMouseCapture, Event, read,
-    },
-    execute,
-};
+use crossterm::event::{Event, KeyCode, read};
 
 #[derive(Debug)]
 enum InputType {
@@ -39,7 +33,7 @@ async fn main() {
 
     while playing {
         i += 1;
-        match play_action(&mut board_vec, player_selector).await {
+        match play_action(&mut board_vec, &mut player_selector).await {
             Ok(_) => {}
             Err(e) => {
                 eprintln!("Error : {}", e);
@@ -76,9 +70,9 @@ async fn main() {
     }
 }
 
-async fn play_action(board: &mut [u8; 9], selector: u8) -> Result<(), Error> {
+async fn play_action(board: &mut [u8; 9], selector: &mut u8) -> Result<(), Error> {
     let to_print: [&str; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(|i| {
-        if selector as usize == i {
+        if *selector as usize == i {
             match board[i] {
                 0 => "0*",
                 1 => "1*",
@@ -101,7 +95,25 @@ async fn play_action(board: &mut [u8; 9], selector: u8) -> Result<(), Error> {
     println!("------------");
     println!("{} | {} | {}", to_print[6], to_print[7], to_print[8]);
 
-    user_input().await;
+    match user_input().await {
+        Ok(input_type) => {
+            match input_type {
+                InputType::KeyUp => {
+
+                },
+                InputType::KeyDown => {
+
+                },
+                InputType::KeyLeft => {
+
+                },
+                InputType::KeyRight => {
+
+                },
+            }
+        },
+        Err(e) => eprintln!("Input error: {}", e),
+    }
 
     Ok(())
 }
@@ -187,14 +199,22 @@ fn simple_wrapper(i: i64) -> Result<i64, Error> {
 }
 
 async fn user_input() -> Result<InputType, Error> {
-    loop {
-        if poll(Duration::from_millis(500))? {
-            match read()? {
-                Event::Key(event) => println!("{:?}", event),
-                _ => return Err(anyhow::format_err!("unkonw input")),
+    if poll(Duration::from_millis(50))? {
+        match read()? {
+            Event::Key(event) => {
+                println!("{:?}", event);
+                match event.code {
+                    KeyCode::Up => return Ok(InputType::KeyUp),
+                    KeyCode::Down => return Ok(InputType::KeyDown),
+                    KeyCode::Left => return Ok(InputType::KeyLeft),
+                    KeyCode::Right => return Ok(InputType::KeyRight),
+                    _ => return Err(anyhow::format_err!("unsupported key")),
+                }
             }
+            _ => return Err(anyhow::format_err!("unknown input")),
         }
     }
+    Err(anyhow::format_err!("no input received"))
 }
 
 #[cfg(test)]
