@@ -1,8 +1,26 @@
 use anyhow::{Error, Result};
+use crossterm::event::poll;
 use std::thread;
-use std::time::Duration;
+use std::{io, time::Duration};
 
-fn main() {
+use crossterm::{
+    event::{
+        DisableBracketedPaste, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste,
+        EnableFocusChange, EnableMouseCapture, Event, read,
+    },
+    execute,
+};
+
+#[derive(Debug)]
+enum InputType {
+    KeyUp,
+    KeyDown,
+    KeyLeft,
+    KeyRight,
+}
+
+#[tokio::main]
+async fn main() {
     println!("Hello, world!");
     const REFRESH_RATE: f64 = 1.0 / 12.0;
 
@@ -21,7 +39,7 @@ fn main() {
 
     while playing {
         i += 1;
-        match play_action(&mut board_vec, player_selector) {
+        match play_action(&mut board_vec, player_selector).await {
             Ok(_) => {}
             Err(e) => {
                 eprintln!("Error : {}", e);
@@ -58,7 +76,7 @@ fn main() {
     }
 }
 
-fn play_action(board: &mut [u8; 9], selector: u8) -> Result<(), Error> {
+async fn play_action(board: &mut [u8; 9], selector: u8) -> Result<(), Error> {
     let to_print: [&str; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(|i| {
         if selector as usize == i {
             match board[i] {
@@ -83,10 +101,14 @@ fn play_action(board: &mut [u8; 9], selector: u8) -> Result<(), Error> {
     println!("------------");
     println!("{} | {} | {}", to_print[6], to_print[7], to_print[8]);
 
+    user_input().await;
+
     Ok(())
 }
 
 fn checks_win(board: &[u8; 9]) -> Result<bool, Error> {
+    // diagonal
+
     Ok(false)
 }
 
@@ -162,6 +184,17 @@ fn simple_wrapper(i: i64) -> Result<i64, Error> {
     println!("result: {}", result);
 
     Ok(result)
+}
+
+async fn user_input() -> Result<InputType, Error> {
+    loop {
+        if poll(Duration::from_millis(500))? {
+            match read()? {
+                Event::Key(event) => println!("{:?}", event),
+                _ => return Err(anyhow::format_err!("unkonw input")),
+            }
+        }
+    }
 }
 
 #[cfg(test)]

@@ -28,8 +28,11 @@ clearscreen = "4.0.1"
 # cause im dumb (and lazy)
 # and i don't want to write it myself
 # cause im dumb (and lazy)
-term_input = "0.1.5"
+crossterm = "0.29.0"
 
 # nah this is one is actually useful
 # this is for the error handling
 anyhow = "1.0.0"
+
+# this is going too far
+tokio = { version = "1.44.2", features = ["full"] }
