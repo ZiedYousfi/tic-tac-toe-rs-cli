@@ -1,7 +1,7 @@
 use anyhow::{Error, Result};
 use crossterm::event::poll;
-use std::thread;
 use std::time::Duration;
+use std::thread;
 
 use crossterm::{
     event::{Event, KeyCode, read},
@@ -44,21 +44,24 @@ async fn main() {
     while playing {
         i += 1;
 
-        enable_raw_mode();
+        enable_raw_mode().expect("can't turn on raw mode");
 
         match play_action(&mut board_vec, &mut player_selector, &player_1_turn).await {
-            Ok(_) => {}
-            Err(e) => {
-                eprintln!("Error : {}", e);
-                continue;
-            }
-        }
-
-        match checks_win(&board_vec) {
-            Ok(b) => {
-                if b {
-                    player_1_win = player_1_turn;
-                    playing = false;
+            Ok(b1) => {
+                if b1 {
+                    match checks_win(&board_vec) {
+                        Ok(b) => {
+                            if b {
+                                player_1_win = player_1_turn;
+                                playing = false;
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("Error : {}", e);
+                            continue;
+                        }
+                    }
+                    player_1_turn = !player_1_turn;
                 }
             }
             Err(e) => {
@@ -67,14 +70,12 @@ async fn main() {
             }
         }
 
-        player_1_turn = !player_1_turn;
-
         //println!("frame {}", i);
 
         thread::sleep(Duration::from_secs_f64(REFRESH_RATE));
         clearscreen::clear().unwrap();
 
-        disable_raw_mode();
+        disable_raw_mode().expect("can't turn off raw mode");
     }
 
     match end_game(player_1_win) {
@@ -89,7 +90,9 @@ async fn play_action(
     board: &mut [u8; 9],
     selector: &mut u8,
     player1_turn: &bool,
-) -> Result<(), Error> {
+) -> Result<bool, Error> {
+    let mut has_played = false;
+
     let to_print: [String; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(|i| {
         if *selector as usize == i {
             match board[i] {
@@ -174,15 +177,20 @@ async fn play_action(
                     },
                 }
             }
-            InputType::Enter => match player1_turn {
-                true => board[*selector as usize] = 1,
-                false => board[*selector as usize] = 2,
-            },
+            InputType::Enter => {
+                has_played = true;
+                if board[*selector as usize] == 0 {
+                    match player1_turn {
+                        true => board[*selector as usize] = 1,
+                        false => board[*selector as usize] = 2,
+                    }
+                }
+            }
         },
         Err(e) => eprintln!("Input error: {}", e),
     }
 
-    Ok(())
+    Ok(has_played)
 }
 
 fn checks_win(board: &[u8; 9]) -> Result<bool, Error> {
