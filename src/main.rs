@@ -11,6 +11,7 @@ enum InputType {
     KeyDown,
     KeyLeft,
     KeyRight,
+    Enter,
 }
 
 #[derive(Debug)]
@@ -39,7 +40,7 @@ async fn main() {
 
     while playing {
         i += 1;
-        match play_action(&mut board_vec, &mut player_selector).await {
+        match play_action(&mut board_vec, &mut player_selector, &player_1_turn).await {
             Ok(_) => {}
             Err(e) => {
                 eprintln!("Error : {}", e);
@@ -62,7 +63,7 @@ async fn main() {
 
         player_1_turn = !player_1_turn;
 
-        println!("frame {}", i);
+        //println!("frame {}", i);
 
         thread::sleep(Duration::from_secs_f64(REFRESH_RATE));
         clearscreen::clear().unwrap();
@@ -76,7 +77,7 @@ async fn main() {
     }
 }
 
-async fn play_action(board: &mut [u8; 9], selector: &mut u8) -> Result<(), Error> {
+async fn play_action(board: &mut [u8; 9], selector: &mut u8, player1_turn: &bool) -> Result<(), Error> {
     let to_print: [&str; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(|i| {
         if *selector as usize == i {
             match board[i] {
@@ -87,10 +88,10 @@ async fn play_action(board: &mut [u8; 9], selector: &mut u8) -> Result<(), Error
             }
         } else {
             match board[i] {
-                0 => " ",
-                1 => "1",
-                2 => "2",
-                _ => "x",
+                0 => "  ",
+                1 => "1 ",
+                2 => "2 ",
+                _ => "x ",
             }
         }
     });
@@ -151,6 +152,12 @@ async fn play_action(board: &mut [u8; 9], selector: &mut u8) -> Result<(), Error
                             return Err(anyhow::format_err!("Actual error for wrapper: {}", e));
                         }
                     },
+                }
+            },
+            InputType::Enter => {
+                match player1_turn {
+                    true => board[*selector as usize] = 1,
+                    false => board[*selector as usize] = 2,
                 }
             }
         },
@@ -252,6 +259,7 @@ async fn user_input() -> Result<InputType, Error> {
                     KeyCode::Down => return Ok(InputType::KeyDown),
                     KeyCode::Left => return Ok(InputType::KeyLeft),
                     KeyCode::Right => return Ok(InputType::KeyRight),
+                    KeyCode::Enter => return Ok(InputType::Enter),
                     _ => return Err(anyhow::format_err!("unsupported key")),
                 }
             }
