@@ -90,29 +90,37 @@ async fn play_action(
     selector: &mut u8,
     player1_turn: &bool,
 ) -> Result<(), Error> {
-    let to_print: [&str; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(|i| {
+    let to_print: [String; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(|i| {
         if *selector as usize == i {
             match board[i] {
-                0 => "0*",
-                1 => "1*",
-                2 => "2*",
-                _ => "x*",
+                0 => " * ".to_string(), // Empty selected cell
+                1 => "X*".to_string(),  // Player 1 selected cell
+                2 => "O*".to_string(),  // Player 2 selected cell
+                _ => "?*".to_string(),
             }
         } else {
             match board[i] {
-                0 => "  ",
-                1 => "1 ",
-                2 => "2 ",
-                _ => "x ",
+                0 => "   ".to_string(), // Empty cell
+                1 => " X ".to_string(), // Player 1 cell
+                2 => " O ".to_string(), // Player 2 cell
+                _ => " ? ".to_string(),
             }
         }
     });
 
-    println!("{} | {} | {}", to_print[0], to_print[1], to_print[2]);
-    println!("------------");
-    println!("{} | {} | {}", to_print[3], to_print[4], to_print[5]);
-    println!("------------");
-    println!("{} | {} | {}", to_print[6], to_print[7], to_print[8]);
+    disable_raw_mode()?;
+    println!(
+        "\n Current player: {}\n",
+        if *player1_turn { "X" } else { "O" }
+    );
+
+    println!(" {} | {} | {} ", to_print[0], to_print[1], to_print[2]);
+    println!("-----------------");
+    println!(" {} | {} | {} ", to_print[3], to_print[4], to_print[5]);
+    println!("-----------------");
+    println!(" {} | {} | {} ", to_print[6], to_print[7], to_print[8]);
+    println!("\n Use arrow keys to move, Enter to place your mark\n");
+    enable_raw_mode()?;
 
     let mut next_selector_value = *selector;
 
