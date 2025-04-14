@@ -1,7 +1,7 @@
 use anyhow::{Error, Result};
 use crossterm::event::poll;
-use std::time::Duration;
 use std::thread;
+use std::time::Duration;
 
 use crossterm::{
     event::{Event, KeyCode, read},
@@ -26,7 +26,6 @@ enum WrapperErrorType {
 #[tokio::main]
 async fn main() {
     println!("Hello, world!");
-    const REFRESH_RATE: f64 = 1.0 / 12.0;
 
     let mut playing: bool = false;
     let mut player_1_turn: bool = true;
@@ -70,9 +69,7 @@ async fn main() {
             }
         }
 
-        //println!("frame {}", i);
-
-        thread::sleep(Duration::from_secs_f64(REFRESH_RATE));
+        println!("frame {}", i);
         clearscreen::clear().unwrap();
 
         disable_raw_mode().expect("can't turn off raw mode");
@@ -97,9 +94,9 @@ async fn play_action(
         if *selector as usize == i {
             match board[i] {
                 0 => " * ".to_string(), // Empty selected cell
-                1 => "X*".to_string(),  // Player 1 selected cell
-                2 => "O*".to_string(),  // Player 2 selected cell
-                _ => "?*".to_string(),
+                1 => " X*".to_string(),  // Player 1 selected cell
+                2 => " O*".to_string(),  // Player 2 selected cell
+                _ => " ?*".to_string(),
             }
         } else {
             match board[i] {
@@ -142,8 +139,8 @@ async fn play_action(
                 }
             }
             InputType::KeyDown => {
-                next_selector_value = (*selector as i64 + 3) as u8;
-                match selector_wrapper(*selector as i64 + 3) {
+                next_selector_value = (*selector as i64 + 4) as u8;
+                match selector_wrapper(*selector as i64 + 4) {
                     Ok(v) => *selector = v,
                     Err(e) => match e {
                         WrapperErrorType::UselessCall => *selector = next_selector_value,
@@ -178,8 +175,8 @@ async fn play_action(
                 }
             }
             InputType::Enter => {
-                has_played = true;
                 if board[*selector as usize] == 0 {
+                    has_played = true;
                     match player1_turn {
                         true => board[*selector as usize] = 1,
                         false => board[*selector as usize] = 2,
@@ -286,7 +283,10 @@ async fn user_input() -> Result<InputType, Error> {
                     KeyCode::Left => return Ok(InputType::KeyLeft),
                     KeyCode::Right => return Ok(InputType::KeyRight),
                     KeyCode::Enter => return Ok(InputType::Enter),
-                    _ => panic!("unsupported key"),
+                    _ => {
+                        disable_raw_mode()?;
+                        panic!("unsupported key")
+                    }
                 }
             }
             _ => return Err(anyhow::format_err!("unknown input")),
