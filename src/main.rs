@@ -3,7 +3,10 @@ use crossterm::event::poll;
 use std::thread;
 use std::time::Duration;
 
-use crossterm::event::{Event, KeyCode, read};
+use crossterm::{
+    event::{Event, KeyCode, read},
+    terminal::{disable_raw_mode, enable_raw_mode},
+};
 
 #[derive(Debug)]
 enum InputType {
@@ -40,6 +43,9 @@ async fn main() {
 
     while playing {
         i += 1;
+
+        enable_raw_mode();
+
         match play_action(&mut board_vec, &mut player_selector, &player_1_turn).await {
             Ok(_) => {}
             Err(e) => {
@@ -67,6 +73,8 @@ async fn main() {
 
         thread::sleep(Duration::from_secs_f64(REFRESH_RATE));
         clearscreen::clear().unwrap();
+
+        disable_raw_mode();
     }
 
     match end_game(player_1_win) {
@@ -77,7 +85,11 @@ async fn main() {
     }
 }
 
-async fn play_action(board: &mut [u8; 9], selector: &mut u8, player1_turn: &bool) -> Result<(), Error> {
+async fn play_action(
+    board: &mut [u8; 9],
+    selector: &mut u8,
+    player1_turn: &bool,
+) -> Result<(), Error> {
     let to_print: [&str; 9] = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(|i| {
         if *selector as usize == i {
             match board[i] {
@@ -153,13 +165,11 @@ async fn play_action(board: &mut [u8; 9], selector: &mut u8, player1_turn: &bool
                         }
                     },
                 }
-            },
-            InputType::Enter => {
-                match player1_turn {
-                    true => board[*selector as usize] = 1,
-                    false => board[*selector as usize] = 2,
-                }
             }
+            InputType::Enter => match player1_turn {
+                true => board[*selector as usize] = 1,
+                false => board[*selector as usize] = 2,
+            },
         },
         Err(e) => eprintln!("Input error: {}", e),
     }
@@ -250,7 +260,7 @@ fn simple_wrapper(i: i64) -> Result<i64, WrapperErrorType> {
 }
 
 async fn user_input() -> Result<InputType, Error> {
-    if poll(Duration::from_millis(50))? {
+    if poll(Duration::from_millis(10))? {
         match read()? {
             Event::Key(event) => {
                 println!("{:?}", event);
@@ -260,7 +270,7 @@ async fn user_input() -> Result<InputType, Error> {
                     KeyCode::Left => return Ok(InputType::KeyLeft),
                     KeyCode::Right => return Ok(InputType::KeyRight),
                     KeyCode::Enter => return Ok(InputType::Enter),
-                    _ => return Err(anyhow::format_err!("unsupported key")),
+                    _ => panic!("unsupported key"),
                 }
             }
             _ => return Err(anyhow::format_err!("unknown input")),
